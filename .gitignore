@@ -1,0 +1,49 @@
+# Git ignore file for plant disease classifier project
+
+# Environment
+.venv/
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Data
+data/
+  *.pickle
+  *.pkl
+  *.npy
+  *.h5
+  *.hdf5
+  *.pt
+  *.pth
+
+# Model artifacts
+models/
+  *.pt
+  *.pth
+  *.ckpt
+  *.bin
+
+# Docker
+.Dockerfile
+*.dockerignore
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Logs
+logs/
+*.log
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Notebooks
+notebooks/
+  *.ipynb_checkpoints/

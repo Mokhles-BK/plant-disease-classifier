@@ -1,54 +1,67 @@
-# Plant Disease Detection: End-to-End Image Classifier
+# Plant Disease Classifier
 
-A robust deep learning pipeline for plant disease detection using leaf images from the PlantVillage dataset via Hugging Face Datasets.
+An end-to-end deep learning app that identifies plant diseases from leaf photos. Upload a photo, get the top-3 predicted diagnoses with confidence scores.
 
-## Project Structure
+Built with PyTorch (CNN from scratch + transfer learning on ResNet18) and served through a Gradio web app.
+
+## Results
+
+Trained on the [PlantVillage dataset](https://huggingface.co/datasets/GVJahnavi/PlantVillage_dataset) (38 classes, 43,503 training images, 10,878 test images), with a severe class imbalance (36:1 largest-to-smallest class ratio) handled via a weighted sampler. Both models below were trained on the full dataset and evaluated on the same held-out test split.
+
+| Model | Accuracy | Macro F1 | Weighted F1 |
+|---|---|---|---|
+| **CNN from scratch** | **97.70%** | **96.85%** | **97.70%** |
+| Transfer learning (ResNet18) | 95.42% | 93.95% | 95.44% |
+
+**The from-scratch CNN outperformed ResNet18 transfer learning on this task.** A plausible reason: the images are small (256x256, resized to 224) and domain-specific (leaf textures and color patterns), which differs quite a bit from the natural photos ResNet18's ImageNet pretraining was built on. A compact model trained directly on the target domain, with a large enough dataset (43k+ images) and enough epochs, was able to learn more task-specific features than a frozen pretrained backbone could offer here.
+
+Full per-class precision/recall/F1 and confusion matrices for both models are in [`reports/`](reports/).
+
+## Project structure
 
 ```
 plant-disease-classifier/
-  data/            - Dataset download/prep scripts, not raw data committed
-  notebooks/       - EDA only, not the main deliverable
   src/
-    data.py        - Dataset/DataLoader, transforms, train/val/test split
-    models.py      - CNN-from-scratch & transfer learning (ResNet18/EfficientNet)
-    train.py       - Training loop, checkpointing, early stopping, logging
-    evaluate.py    - Accuracy, precision/recall/F1, confusion matrix, plots
-  api/
-    main.py        - FastAPI app: /predict (image upload) -> class + confidence, /health
-    schemas.py     - Pydantic request/response models
-  tests/           - Unit tests for data pipeline, model forward pass, API endpoint
-  Dockerfile
-  requirements.txt
-  README.md
+    config.py       - central config: paths, hyperparameters, dataset ID
+    data.py         - dataset loading, stratified split, transforms, DataLoaders
+    models.py       - CNN-from-scratch and ResNet18 transfer learning
+    train.py        - training loop, checkpointing, early stopping
+    evaluate.py      - accuracy, precision/recall/F1, confusion matrix
+    utils.py        - shared helpers (seeding, device selection, class weights)
+  app.py             - Gradio web app (upload image -> top-3 predictions)
+  reports/           - saved metrics (JSON) and confusion matrices (PNG)
+  models/            - trained checkpoints (not committed, see below)
 ```
 
-## Setup Instructions
+## Setup
 
-1. Install dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
+```bash
+pip install -r requirements.txt
+```
 
-2. Download and prepare the dataset:
-   ```bash
-   python src/data.py
-   ```
+## Usage
 
-3. Train the models:
-   ```bash
-   python src/train.py --model baseline
-   python src/train.py --model transfer
-   ```
+Train a model:
+```bash
+python src/train.py --model baseline    # CNN from scratch
+python src/train.py --model transfer    # ResNet18 transfer learning
+```
 
-4. Evaluate the models:
-   ```bash
-   python src/evaluate.py
-   ```
+Evaluate a trained checkpoint:
+```bash
+python src/evaluate.py --ckpt models/baseline_cnn.pt
+python src/evaluate.py --ckpt models/transfer_resnet18.pt
+```
 
-5. Run the API locally:
-   ```bash
-   uvicorn api.main:app --reload
-   ```
+Run the web app locally:
+```bash
+python app.py
+```
+Then open `http://127.0.0.1:7860` in a browser.
 
-## Model Comparison & Recommendation
-*To be filled out after training and evaluation.*
+## Notes
+
+- Model checkpoints (`models/*.pt`) aren't committed to this repo (too large for plain git). Train from scratch with the commands above, or the checkpoints can be provided separately.
+- Training used a GPU (Google Colab, T4) for both full-dataset runs; the codebase also runs on CPU (slower).
+- The deployed app uses the CNN-from-scratch checkpoint (better test-set performance).
+- Live demo: *deployment pending.*

@@ -24,28 +24,34 @@ for _d in (RAW_DIR, PROCESSED_DIR, MODELS_DIR, REPORTS_DIR):
 # ---------------------------------------------------------------------------
 # Dataset
 # ---------------------------------------------------------------------------
-# Well-maintained PlantVillage mirror on Hugging Face (~38 classes, color
-# leaf images). Sourced from the original PlantVillage paper repo.
-HF_DATASET_ID = "mohanty/PlantVillage"
-# Which split variant to use. "color" keeps the original RGB photos; the
-# "segmented" variant has background removed which helps some models but
-# costs more to process. We use color for a fair, representative comparison.
-HF_VARIANT = "color"
+# Working PlantVillage mirror on Hugging Face: 38 classes, 43,503 train /
+# 10,878 test images, 256x256 RGB. Loads with plain
+# datasets.load_dataset("GVJahnavi/PlantVillage_dataset"), no auth needed.
+# (mohanty/PlantVillage is broken — Python 2.7 loading script + 401 on
+# data.zip — and is deliberately NOT used.)
+HF_DATASET_ID = "GVJahnavi/PlantVillage_dataset"
+HF_TEST_SPLIT = "test"   # HF's predefined test split, used as-is
 
 # Image preprocessing
 IMG_SIZE = 224
 MEAN = (0.485, 0.456, 0.406)   # ImageNet-normalized stats, fine for leaves
 STD = (0.229, 0.224, 0.225)
 
-# Train / val / test split (stratified)
-TRAIN_RATIO = 0.70
+# Train / val split (stratified on the HF train split; test = HF predefined)
+TRAIN_RATIO = 0.85
 VAL_RATIO = 0.15
-TEST_RATIO = 0.15
+TEST_RATIO = 0.0        # test comes from HF's predefined split, not ours
 RANDOM_SEED = 42
 
 # Batch size tuned for CPU training (no GPU in this environment)
 BATCH_SIZE = 32
-NUM_WORKERS = 2
+# Windows uses the "spawn" multiprocessing start method, so non-zero
+# NUM_WORKERS reliably trips "attempt to start a new process before the
+# current process has finished its bootstrapping phase". On Linux (e.g.
+# Colab's T4) a couple of workers keep the GPU fed while the model runs.
+import platform
+
+NUM_WORKERS = 2 if platform.system() != "Windows" else 0
 
 # ---------------------------------------------------------------------------
 # Training defaults

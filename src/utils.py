@@ -10,6 +10,11 @@ import numpy as np
 import torch
 from torch.utils.data import WeightedRandomSampler
 
+try:
+    from . import config
+except ImportError:  # allow ``python src/utils.py`` from the repo root
+    import config  # type: ignore
+
 
 def set_seed(seed: int) -> None:
     """Seed Python, NumPy and PyTorch for reproducible runs."""
@@ -48,7 +53,7 @@ def compute_class_weights(
     # Build a weighted sampler for the training loader when imbalance is high.
     sampler = None
     ratio = counts.max() / max(counts.min(), 1e-9)
-    if ratio > 3.0:
+    if ratio > config.IMBALANCE_RATIO_THRESHOLD:
         sample_weights = 1.0 / np.sqrt(counts)[labels]
         sampler = WeightedRandomSampler(
             torch.as_tensor(sample_weights, dtype=torch.double),

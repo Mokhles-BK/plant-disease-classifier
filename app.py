@@ -96,7 +96,7 @@ def _load_class_names(ckpt: dict, num_classes: int) -> List[str]:
 
 def load_model():
     """Load the transfer checkpoint and rebuild the model. Returns (model, class_names, device)."""
-    ckpt_path = Path(config.TRANSFER_CKPT)
+    ckpt_path = Path(config.BASELINE_CKPT)
     ckpt = torch.load(ckpt_path, map_location="cpu", weights_only=False)
 
     model_name = ckpt.get("model_name", "transfer")
@@ -148,8 +148,8 @@ app = gr.Interface(
     title="Plant Disease Classifier",
     description=(
         "Upload a photo of a leaf and get the top-3 predicted plant diseases "
-        "with confidence scores. Model: transfer ResNet18 trained on the "
-        "Hugging Face PlantVillage dataset (38 classes)."
+        "with confidence scores. Model: CNN trained from scratch on the "
+        "Hugging Face PlantVillage dataset (38 classes, 97.7% test accuracy)."
     ),
     examples=None,
     cache_examples=False,

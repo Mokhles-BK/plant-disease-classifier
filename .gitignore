@@ -47,3 +47,5 @@ Thumbs.db
 # Notebooks
 notebooks/
   *.ipynb_checkpoints/
+
+.gradio/
